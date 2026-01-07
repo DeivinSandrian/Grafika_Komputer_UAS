@@ -21,10 +21,11 @@ var controls = new OrbitControls(camera, renderer.domElement);
 var ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
 scene.add(ambientLight);
 
-// var pointLight = new THREE.PointLight(0xffffff, 3);
-// pointLight.position.set(0, 5, 0);
-// scene.add(pointLight);
-// scene.add(new THREE.PointLightHelper(pointLight, 0.2, 0x00ff00));
+var pointLight = new THREE.PointLight(0xffffff, 100);
+pointLight.position.set(0, 5, 0);
+pointLight.castShadow = true;
+scene.add(pointLight);
+scene.add(new THREE.PointLightHelper(pointLight, 0.2, 0x00ff00));
 
 var spotLight = new THREE.SpotLight(0xffffff, 200, 12, Math.PI / 6);
 spotLight.position.set(8, 8, 5);
@@ -44,7 +45,7 @@ var lantai = new THREE.Mesh(
     new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide , map : textureLoader.load('./img/keramik.jpg')})
 );
 lantai.rotation.x = Math.PI / 2;
-lantai.castShadow = true;
+// lantai.castShadow = true;
 lantai.receiveShadow = true;
 scene.add(lantai);
 
@@ -128,6 +129,8 @@ var wallMaterial = makePokemonWallMaterial();
 
 var wall_belakang = new THREE.Mesh(new THREE.PlaneGeometry(16, 6), wallMaterial);
 wall_belakang.position.set(0, 3, -6);
+// wall_belakang.castShadow = true;
+wall_belakang.receiveShadow = true;
 scene.add(wall_belakang);
 
 // var wall_belakang_2 = new THREE.Mesh(new THREE.PlaneGeometry(16, 2), new THREE.MeshLambertMaterial({ color: 0x000000, side: THREE.DoubleSide }));
@@ -140,16 +143,22 @@ scene.add(wall_belakang);
 
 var wall_depan = new THREE.Mesh(new THREE.PlaneGeometry(16, 6), wallMaterial);
 wall_depan.position.set(0, 3, 6);
+// wall_depan.castShadow = true;
+wall_depan.receiveShadow = true;
 scene.add(wall_depan);
 
 var wall_kiri = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), wallMaterial);
 wall_kiri.position.set(-8, 3, 0);
 wall_kiri.rotation.y = Math.PI / 2;
+// wall_kiri.castShadow = true;
+wall_kiri.receiveShadow = true;
 scene.add(wall_kiri);
 
 var wall_kanan = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), wallMaterial);
 wall_kanan.position.set(8, 3, 0);
 wall_kanan.rotation.y = Math.PI / 2;
+// wall_kanan.castShadow = true;
+wall_kanan.receiveShadow = true;
 scene.add(wall_kanan);
 
 var positions = [
@@ -165,9 +174,13 @@ var positions = [
 ];
 
 var pokemonMeshes = [];
-var model = []; // buat path model nanti
-for (var i = 0; i < 9; i++) {
-    var pos = positions[i];
+var models = [
+    'models/Pikachu.glb',
+    'models/Bulbasaur.glb',
+    'models/Squirtle.glb',
+]; // buat path model nanti
+for (let i = 0; i < positions.length; i++) {
+    const pos = positions[i];
 
     var pedestalGeo = new THREE.CylinderGeometry(0.6, 0.6);
     var pedestalMat = new THREE.MeshLambertMaterial({ color: 0x00ffff });
@@ -185,20 +198,23 @@ for (var i = 0; i < 9; i++) {
     // pokemonMesh.receiveShadow = true;
     // scene.add(pokemonMesh);
 
-    var model = 'models/Pikachu.glb'; // Ganti sesuai model yang diinginkan
+    const model = models[i % models.length];
     loader.load(model, function(gltf) {
-    var pokemonModel = gltf.scene
-    // pokemonModel.scale.set(0.0025, 0.0025, 0.0025);
-    pokemonModel.position.set(pos[0], 1.9, pos[2]);
-    pokemonModel.rotation.y = Math.PI; // Menghadap ke depan
-    // pokemonModel.traverse(function(node) {
-    //     if (node.isMesh) {
-    //         node.castShadow = true;
-    //         node.receiveShadow = true;
-    //     }
-    // });
-    scene.add(pokemonModel);
-    pokemonMeshes.push(pokemonModel);
+        const pokemonModel = gltf.scene;
+        pokemonModel.scale.set(1, 1, 1);
+        pokemonModel.position.set(pos[0], 1.9, pos[2]);
+        pokemonModel.rotation.y = Math.PI;
+        pokemonModel.userData.index = i;
+        // Dari AI untuk shadow pada pokemon supaya muncul semua
+        pokemonModel.traverse((node) => {
+            if (node.isMesh) {
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        });
+        // Sampai Sini
+        scene.add(pokemonModel);
+        pokemonMeshes.push(pokemonModel);
     });
 
     // pokemonMeshes.push(pokemonMesh);
@@ -240,12 +256,15 @@ window.addEventListener('click', function(e) {
         mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
-        var intersects = raycaster.intersectObjects(pokemonMeshes);
+        var intersects = raycaster.intersectObjects(pokemonMeshes, true);
 
         if (intersects.length > 0) {
-            var index = pokemonMeshes.indexOf(intersects[0].object);
-            if (index !== -1) {
-                showPanel(index);
+            var hit = intersects[0].object;
+            while (hit && hit.userData.index === undefined) {
+                hit = hit.parent;
+            }
+            if (hit && hit.userData.index !== undefined) {
+                showPanel(hit.userData.index);
             }
         } else {
             hidePanel();
