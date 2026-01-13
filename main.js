@@ -11,6 +11,7 @@ var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHei
 camera.position.set(0, 2, 20);
 camera.lookAt(0, 2, 10);
 camera.fov = 60;
+camera.rotation.order = 'YXZ';
 camera.updateProjectionMatrix();
 
 var renderer = new THREE.WebGLRenderer({antialias: true});
@@ -57,10 +58,16 @@ document.body.addEventListener('click', () => {
 
 document.addEventListener('mousemove', (e) => {
     if (document.pointerLockElement === document.body) {
-        yaw -= e.movementX * mouseSensitivity;
-        pitch -= e.movementY * mouseSensitivity;
+        // Batasi movementX/Y yang terlalu ekstrem (sering terjadi saat baru lock)
+        const moveX = Math.abs(e.movementX) > 500 ? 0 : e.movementX;
+        const moveY = Math.abs(e.movementY) > 500 ? 0 : e.movementY;
 
-        pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+        yaw -= moveX * mouseSensitivity;
+        pitch -= moveY * mouseSensitivity;
+
+        // Batasi pitch agar tidak pas 90 derajat (mencegah NaN saat kalkulasi movement)
+        const limit = Math.PI / 2 - 0.01;
+        pitch = Math.max(-limit, Math.min(limit, pitch));
 
         camera.rotation.set(pitch, yaw, 0);
     }
@@ -74,7 +81,14 @@ function updateMovement() {
     const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
     forward.y = 0;
-    forward.normalize();
+    
+    // Cek jika forward tidak nol (menghindari NaN saat look straight up/down)
+    if (forward.lengthSq() > 0.0001) {
+        forward.normalize();
+    } else {
+        // Jika lurus ke atas/bawah, gunakan arah default kamera atau abaikan
+        forward.set(0, 0, 0);
+    }
 
     const right = new THREE.Vector3();
     right.crossVectors(forward, camera.up).normalize();
