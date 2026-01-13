@@ -620,18 +620,6 @@ const corridorWallMat = new THREE.MeshStandardMaterial({
     side: THREE.DoubleSide
 });
 
-const corridorFrameMat = new THREE.MeshStandardMaterial({
-    color: 0x111111,
-    roughness: 0.4,
-    metalness: 0.6
-});
-
-const corridorDarkMat = new THREE.MeshStandardMaterial({
-    color: 0x000000,
-    roughness: 1,
-    metalness: 0
-});
-
 const OVERSIZED_MODEL_SCALE = {
     'Questionmark.glb': 0.002,
     'Staraptor.glb': 0.2,
@@ -699,6 +687,18 @@ function createGallery(offsetX = 0, modelList = []) {
 
             scene.add(pokemonModel);
             pokemonMeshes.push(pokemonModel);
+
+            const fileName = model.split('/').pop();
+
+            pokemonModel.userData.pokemon =
+                Data_Pokemon[fileName] || {
+                    name: 'Unknown Pokémon',
+                    type: 'Unknown',
+                    desc: 'Data not available',
+                    evolve: 'Unknown',
+                    weight: 'Unknown',
+                    height: 'Unknown'
+                };
         });
     }
 }
@@ -774,9 +774,52 @@ createRoomLights(50);
 createGallery(50, galleryElectric1Models);
 
 // Dari AI untuk menampilkan pokemon ketika di klik
-var pokemonNames = ["Pikachu", "Pikachu", "Pikachu", "Pikachu", "Pikachu", "Pikachu", "Pikachu", "Pikachu", "Pikachu"];
-var pokemonTypes = ["Electric", "Electric", "Electric", "Electric", "Electric", "Electric", "Electric", "Electric", "Electric"];
-var pokemonDescs = ["Pikachu", "Pikachu", "Pikachu", "Pikachu", "Pikachu", "Pikachu", "Pikachu", "Pikachu", "Pikachu"];
+const Data_Pokemon = {
+    'Pidgeot.glb': { name: 'Pidgeot', type: 'Normal / Flying', desc: 'The Bird Pokémon', evolve: 'Final Evolution', weight: '39.5 kg', height: '1.5 m' },
+    'Stoutland.glb': { name: 'Stoutland', type: 'Normal', desc: 'The Big-Hearted Pokémon', evolve: 'Final Evolution', weight: '61 kg', height: '1.2 m' },
+    'Toucannon.glb': { name: 'Toucannon', type: 'Normal / Flying', desc: 'The Cannon Beak Pokémon', evolve: 'Final Evolution', weight: '26.5 kg', height: '1.1 m' },
+    'Pidgeotto.glb': { name: 'Pidgeotto', type: 'Normal / Flying', desc: 'The Bird Pokémon', evolve: 'Second Evolution', weight: '13 kg', height: '1.1 m' },
+    'Herdier.glb': { name: 'Herdier', type: 'Normal', desc: 'The Loyal Dog Pokémon', evolve: 'Second Evolution', weight: '14.7 kg', height: '0.9 m' },
+    'Trumbeak.glb': { name: 'Trumbeak', type: 'Normal / Flying', desc: 'The Bugle Beak Pokémon', evolve: 'Second Evolution', weight: '14.7 kg', height: '0.9 m' },
+    'Pidgey.glb': { name: 'Pidgey', type: 'Normal / Flying', desc: 'The Tiny Bird Pokémon', evolve: 'First Evolution', weight: '1.8 kg', height: '0.3 m' },
+    'Lillipup.glb': { name: 'Lillipup', type: 'Normal', desc: 'The Puppy Pokémon', evolve: 'First Evolution', weight: '4.1 kg', height: '0.4 m' },
+    'Pikipek.glb': { name: 'Pikipek', type: 'Normal / Flying', desc: 'The Woodpecker Pokémon', evolve: 'First Evolution', weight: '1.2 kg', height: '0.3 m' },
+    'Wigglytuff.glb': { name: 'Wigglytuff', type: 'Normal / Fairy', desc: 'The Balloon Pokémon', evolve: 'Final Evolution', weight: '12 kg', height: '1 m' },
+    'Staraptor.glb': { name: 'Staraptor', type: 'Normal / Flying', desc: 'The Predator Pokémon', evolve: 'Final Evolution', weight: '24.9 kg', height: '1.2 m' },
+    'Blissey.glb': { name: 'Blissey', type: 'Normal', desc: 'The Happiness Pokémon', evolve: 'Final Evolution', weight: '46.8 kg', height: '1.5 m' },
+    'Jigglypuff.glb': { name: 'Jigglypuff', type: 'Normal / Fairy', desc: 'The Balloon Pokémon', evolve: 'Second Evolution', weight: '5.5 kg', height: '0.5 m' },
+    'Staravia.glb': { name: 'Staravia', type: 'Normal / Flying', desc: 'The Starling Pokémon', evolve: 'Second Evolution', weight: '15.5 kg', height: '0.6 m' },
+    'Chansey.glb': { name: 'Chansey', type: 'Normal', desc: 'The Egg Pokémon', evolve: 'Second Evolution', weight: '34.6 kg', height: '1.1 m' },
+    'Igglybuff.glb': { name: 'Igglybuff', type: 'Normal / Fairy', desc: 'The Balloon Pokémon', evolve: 'First Evolution', weight: '1 kg', height: '0.3 m' },
+    'Starly.glb': { name: 'Starly', type: 'Normal / Flying', desc: 'The Starling Pokémon', evolve: 'First Evolution', weight: '2 kg', height: '0.3 m' },
+    'Happiny.glb': { name: 'Happiny', type: 'Normal', desc: 'The Playhouse Pokémon', evolve: 'First Evolution', weight: '24.4 kg', height: '0.6 m' },
+    'Porygon-z.glb': { name: 'Porygon-Z', type: 'Normal', desc: 'The Virtual Pokémon', evolve: 'Final Evolution', weight: '34 kg', height: '0.8 m' },
+    'Zangoose.glb': { name: 'Zangoose', type: 'Normal', desc: 'The Cat Ferret Pokémon', evolve: 'No Evolution', weight: '40.3 kg', height: '1.3 m' },
+    'Audino.glb': { name: 'Audino', type: 'Normal', desc: 'The Hearing Pokémon', evolve: 'No Evolution', weight: '31 kg', height: '1.1 m' },
+    'Porygon2.glb': { name: 'Porygon2', type: 'Normal', desc: 'The Virtual Pokémon', evolve: 'Second Evolution', weight: '32 kg', height: '0.6 m' },
+    'Delcatty.glb': { name: 'Delcatty', type: 'Normal', desc: 'The Prim Pokémon', evolve: 'No Evolution', weight: '32.6 kg', height: '1 m' },
+    'Sawsbuck.glb': { name: 'Sawsbuck', type: 'Normal / Grass', desc: 'The Season Pokémon', evolve: 'Final Evolution', weight: '92.5 kg', height: '1.2 m' },
+    'Porygon.glb': { name: 'Porygon', type: 'Normal', desc: 'The Virtual Pokémon', evolve: 'First Evolution', weight: '36.5 kg', height: '0.8 m' },
+    'Skitty.glb': { name: 'Skitty', type: 'Normal', desc: 'The Kitten Pokémon', evolve: 'First Evolution', weight: '11 kg', height: '0.6 m' },
+    'Deerling.glb': { name: 'Deerling', type: 'Normal / Grass', desc: 'The Season Pokémon', evolve: 'First Evolution', weight: '19.5 kg', height: '0.6 m' },
+    'Infernape.glb': { name: 'Infernape', type: 'Fire / Fighting', desc: 'The Flame Pokémon', evolve: 'Final Evolution', weight: '55 kg', height: '1.2 m' },
+    'Talonflame.glb': { name: 'Talonflame', type: 'Fire / Flying', desc: 'The Scorching Pokémon', evolve: 'Final Evolution', weight: '24.5 kg', height: '1.1 m' },
+    'Charmeleon.glb': { name: 'Charmeleon', type: 'Fire', desc: 'The Flame Pokémon', evolve: 'Second Evolution', weight: '19 kg', height: '1.1 m' },
+    'Monferno.glb': { name: 'Monferno', type: 'Fire / Fighting', desc: 'The Playful Pokémon', evolve: 'Second Evolution', weight: '22 kg', height: '0.9 m' },
+    'Fletchinder.glb': { name: 'Fletchinder', type: 'Fire / Flying', desc: 'The Ember Pokémon', evolve: 'Second Evolution', weight: '16 kg', height: '0.7 m' },
+    'Charmander.glb': { name: 'Charmander', type: 'Fire', desc: 'The Lizard Pokémon', evolve: 'First Evolution', weight: '8.5 kg', height: '0.6 m' },
+    'Chimchar.glb': { name: 'Chimchar', type: 'Fire', desc: 'The Chimp Pokémon', evolve: 'First Evolution', weight: '6.2 kg', height: '0.4 m' },
+    'Fletchling.glb': { name: 'Fletchling', type: 'Normal / Flying', desc: 'The Tiny Robin Pokémon', evolve: 'First Evolution', weight: '1.7 kg', height: '0.3 m' },
+    'Raichu.glb':    { name: 'Raichu', type: 'Electric', desc: 'The Mouse Pokémon', evolve: 'Final Evolution', weight: '30 kg', height: '0.8 m' },
+    'Magnezone.glb': { name: 'Magnezone', type: 'Electric / Steel', desc: 'The Magnet Area Pokémon', evolve: 'Final Evolution', weight: '180 kg', height: '1.2 m' },
+    'Electivire.glb': { name: 'Electivire', type: 'Electric', desc: 'The Thunderbolt Pokémon', evolve: 'Final Evolution', weight: '138.6 kg', height: '1.8 m' },
+    'Pikachu.glb':   { name: 'Pikachu', type: 'Electric', desc: 'The Mouse Pokémon', evolve: 'Second Evolution', weight: '6 kg', height: '0.4 m' },
+    'Magneton.glb': { name: 'Magneton', type: 'Electric / Steel', desc: 'The Magnet Pokémon', evolve: 'Second Evolution', weight: '60 kg', height: '1 m' },
+    'Electabuzz.glb': { name: 'Electabuzz', type: 'Electric', desc: 'The Electric Pokémon', evolve: 'Second Evolution', weight: '30 kg', height: '1.2 m' },
+    'Pichu.glb': { name: 'Pichu', type: 'Electric', desc: 'The Tiny Mouse Pokémon', evolve: 'First Evolution', weight: '2 kg', height: '0.3 m' },
+    'Magnemite.glb': { name: 'Magnemite', type: 'Electric / Steel', desc: 'The Magnet Pokémon', evolve: 'First Evolution', weight: '6 kg', height: '0.3 m' },
+    'Elekid.glb': { name: 'Elekid', type: 'Electric', desc: 'The Electric Pokémon', evolve: 'First Evolution', weight: '23.5 kg', height: '0.6 m' }
+};
 
 var raycaster = new THREE.Raycaster();
 var mouse = new THREE.Vector2();
@@ -785,15 +828,24 @@ var infoPanel = document.getElementById('info-panel');
 var pokemonName = document.getElementById('pokemon-name');
 var pokemonType = document.getElementById('pokemon-type');
 var pokemonDesc = document.getElementById('pokemon-desc');
+var pokemonEvolve = document.getElementById('pokemon-evolve');
+var pokemonWeight = document.getElementById('pokemon-weight');
+var pokemonHeight = document.getElementById('pokemon-height');
 var closeBtn = document.getElementById('close-btn');
 
-function showPanel(index) {
-    pokemonName.textContent = pokemonNames[index];
-    pokemonType.textContent = "Tipe: " + pokemonTypes[index];
-    pokemonDesc.textContent = pokemonDescs[index];
+function showPanelFromObject(obj) {
+    const data = obj.userData.pokemon;
+
+    pokemonName.textContent = data.name;
+    pokemonType.textContent = "Tipe: " + data.type;
+    pokemonDesc.textContent = data.desc;
+    pokemonEvolve.textContent = "Evolusi: " + data.evolve;
+    pokemonWeight.textContent = "Berat: " + data.weight;
+    pokemonHeight.textContent = "Tinggi: " + data.height;
+
     infoPanel.classList.add('show');
     document.exitPointerLock();
-}
+}   
 
 function hidePanel() {
     infoPanel.classList.remove('show');
@@ -802,7 +854,7 @@ function hidePanel() {
 closeBtn.addEventListener('click', function(e) {
     e.stopPropagation();
     hidePanel();
-    document.body.requestPointerLock(); // kunci kursor kembali
+    document.body.requestPointerLock();
 });
 
 
@@ -816,7 +868,6 @@ window.addEventListener('click', function(e) {
     // Raycaster
     if (e.target === renderer.domElement || document.pointerLockElement === document.body) {
         if (document.pointerLockElement === document.body) {
-            // Tembak ke tengah (crosshair)
             raycaster.setFromCamera({ x: 0, y: 0 }, camera);
         } else {
             // posisi klik mouse
@@ -833,7 +884,7 @@ window.addEventListener('click', function(e) {
                 hit = hit.parent;
             }
             if (hit && hit.userData.index !== undefined) {
-                showPanel(hit.userData.index);
+                showPanelFromObject(hit);
             }
         } else if (!isPanelOpen) {
             hidePanel();

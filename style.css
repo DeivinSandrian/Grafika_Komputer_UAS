@@ -61,6 +61,7 @@ body {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     text-align: center;
+    gap: 16px;
 }
 
 #info-panel.show {
@@ -98,6 +99,18 @@ body {
     line-height: 1.6;
     color: rgba(255, 255, 255, 0.8);
     margin-bottom: 30px;
+}
+
+#pokemon-evolve {
+    margin-bottom: 30px;
+}
+
+#pokemon-weight {
+    margin-bottom: 30px;
+}
+
+#pokemon-height {
+    margin-bottom: 20px;
 }
 
 #close-btn {
