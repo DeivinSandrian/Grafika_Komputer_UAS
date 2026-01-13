@@ -21,8 +21,8 @@ renderer.shadowMap.type = THREE.BasicShadowMap;
 document.body.appendChild(renderer.domElement);
 
 // var controls = new OrbitControls(camera, renderer.domElement);
-camera.position.set(0, 1.7, 8); // tinggi mata
-camera.lookAt(0, 1.7, 0);
+// camera.position.set(0, 1.7, 8); // tinggi mata
+// camera.lookAt(0, 1.7, 0);
 
 // Kontrol keyboard untuk navigasi(AI)
 const keys = {
@@ -52,9 +52,9 @@ let yaw = 0;
 let pitch = 0;
 const mouseSensitivity = 0.002;
 
-document.body.addEventListener('click', () => {
-    document.body.requestPointerLock();
-});
+// document.body.addEventListener('click', () => {
+//     document.body.requestPointerLock();
+// });
 
 document.addEventListener('mousemove', (e) => {
     if (document.pointerLockElement === document.body) {
@@ -791,24 +791,40 @@ function showPanel(index) {
     pokemonName.textContent = pokemonNames[index];
     pokemonType.textContent = "Tipe: " + pokemonTypes[index];
     pokemonDesc.textContent = pokemonDescs[index];
-    infoPanel.style.display = 'block';
+    infoPanel.classList.add('show');
+    document.exitPointerLock();
 }
 
 function hidePanel() {
-    infoPanel.style.display = 'none';
+    infoPanel.classList.remove('show');
 }
 
 closeBtn.addEventListener('click', function(e) {
     e.stopPropagation();
     hidePanel();
+    document.body.requestPointerLock(); // kunci kursor kembali
 });
 
-window.addEventListener('click', function(e) {
-    if (e.target === renderer.domElement) {
-        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
-        raycaster.setFromCamera(mouse, camera);
+window.addEventListener('click', function(e) {
+    // Pointer Lock
+    const isPanelOpen = infoPanel.classList.contains('show');
+    if (!isPanelOpen && document.pointerLockElement !== document.body) {
+        document.body.requestPointerLock();
+    }
+
+    // Raycaster
+    if (e.target === renderer.domElement || document.pointerLockElement === document.body) {
+        if (document.pointerLockElement === document.body) {
+            // Tembak ke tengah (crosshair)
+            raycaster.setFromCamera({ x: 0, y: 0 }, camera);
+        } else {
+            // posisi klik mouse
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+        }
+
         var intersects = raycaster.intersectObjects(pokemonMeshes, true);
 
         if (intersects.length > 0) {
@@ -818,14 +834,12 @@ window.addEventListener('click', function(e) {
             }
             if (hit && hit.userData.index !== undefined) {
                 showPanel(hit.userData.index);
-                startEvolution(hit);
             }
-        } else {
+        } else if (!isPanelOpen) {
             hidePanel();
         }
     }
 });
-
 window.addEventListener('resize', function() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -844,7 +858,7 @@ function draw() {
     requestAnimationFrame(draw);
 
     if (entering && camera.position.z > 10) {
-    camera.position.z -= 0.05;
+    camera.position.z -= 0.1;
     camera.lookAt(0, 2, 0);
     } else {
         entering = false;
