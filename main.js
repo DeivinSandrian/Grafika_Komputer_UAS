@@ -17,7 +17,7 @@ camera.updateProjectionMatrix();
 var renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.BasicShadowMap;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 // var controls = new OrbitControls(camera, renderer.domElement);
@@ -52,22 +52,46 @@ let yaw = 0;
 let pitch = 0;
 const mouseSensitivity = 0.002;
 
-// document.body.addEventListener('click', () => {
-//     document.body.requestPointerLock();
-// });
+let skipNextMouseMove = false;
+let targetYaw = 0;
+let targetPitch = 0;
+const smoothFactor = 0.5;
+
+document.addEventListener('pointerlockchange', () => {
+    if (document.pointerLockElement === document.body) {
+        skipNextMouseMove = true;
+        targetYaw = yaw;
+        targetPitch = pitch;
+    }
+});
 
 document.addEventListener('mousemove', (e) => {
     if (document.pointerLockElement === document.body) {
-        // Batasi movementX/Y yang terlalu ekstrem (sering terjadi saat baru lock)
-        const moveX = Math.abs(e.movementX) > 500 ? 0 : e.movementX;
-        const moveY = Math.abs(e.movementY) > 500 ? 0 : e.movementY;
+        // Skip frame pertama setelah pointer lock
+        if (skipNextMouseMove) {
+            skipNextMouseMove = false;
+            return;
+        }
 
-        yaw -= moveX * mouseSensitivity;
-        pitch -= moveY * mouseSensitivity;
+        // Batasi movementX/Y yang terlalu ekstrem (threshold lebih rendah)
+        const maxMove = 100;
+        if (Math.abs(e.movementX) > maxMove || Math.abs(e.movementY) > maxMove) {
+            return; // Abaikan gerakan ekstrem sepenuhnya
+        }
+
+        const moveX = e.movementX;
+        const moveY = e.movementY;
+
+        targetYaw -= moveX * mouseSensitivity;
+        targetPitch -= moveY * mouseSensitivity;
 
         // Batasi pitch agar tidak pas 90 derajat (mencegah NaN saat kalkulasi movement)
         const limit = Math.PI / 2 - 0.01;
-        pitch = Math.max(-limit, Math.min(limit, pitch));
+        targetPitch = Math.max(-limit, Math.min(limit, targetPitch));
+
+        // Smoothing - interpolasi menuju target
+        yaw += (targetYaw - yaw) * smoothFactor;
+        pitch += (targetPitch - pitch) * smoothFactor;
 
         camera.rotation.set(pitch, yaw, 0);
     }
@@ -354,34 +378,42 @@ const galleryElectric1Models = [
     'models/Elekid.glb'
 ];
 
-const globalAmbient = new THREE.AmbientLight(0xffffff, 0.05);
+const globalAmbient = new THREE.AmbientLight(0xffffff, 1);
 scene.add(globalAmbient);
 
 function createRoomLights(offsetX = 0) {
 
-    const main = new THREE.PointLight(0xffffff, 40, 0);
-    main.position.set(offsetX, 6, 0);
+    const main = new THREE.PointLight(0xffffff, 175, 0); 
+    main.position.set(offsetX, 5.5, 0); 
     main.castShadow = true;
+    
+    main.shadow.mapSize.width = 1024;  
+    main.shadow.mapSize.height = 1024;
+    main.shadow.camera.near = 0.5;
+    main.shadow.camera.far = 20;
+    main.shadow.bias = -0.001;
+    main.shadow.radius = 4; 
+    
     const mainHelper = new THREE.PointLightHelper(main, 1);
     scene.add(mainHelper);
     
     scene.add(main);
 
-    const spot = new THREE.SpotLight(
-        0xffffff,
-        50,
-        35,
-        Math.PI / 2,
-        0.3,
-        1
-    );
+    // const spot = new THREE.SpotLight(
+    //     0xffffff,
+    //     50,
+    //     35,
+    //     Math.PI / 2,
+    //     0.3,
+    //     1
+    // );
 
-    spot.position.set(offsetX, 9, 3);
-    spot.target.position.set(offsetX, 1.5, 0);
-    spot.castShadow = false;
+    // spot.position.set(offsetX, 9, 3);
+    // spot.target.position.set(offsetX, 1.5, 0);
+    // spot.castShadow = false;
 
-    scene.add(spot);
-    scene.add(spot.target);
+    // scene.add(spot);
+    // scene.add(spot.target);
 }
 
 function createRoomCeiling(offsetX = 0) {
