@@ -20,6 +20,135 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
+// ===== FIRST-PERSON INTRO ANIMATION ===== AI
+let introActive = true;
+let dioramaModel = null;
+let introStartTime = 0;
+let introPhase = 'loading'; // 'loading', 'walking', 'done'
+
+
+const dioramaPosition = new THREE.Vector3(0, 0, 20);
+
+const introPath = [
+    // 1. Atas tangga
+    { pos: new THREE.Vector3(-6.5, 1.2, 1.5), look: new THREE.Vector3(-4.5, 0.8, 1.5), time: 0 },
+    
+    // 2. Turun tangga (dipercepat ke 1.5 detik)
+    { pos: new THREE.Vector3(-3.0, 0.8, 1.5), look: new THREE.Vector3(-1.0, 0.0, 1.5), time: 1500 },
+    
+    // 3. Bawah tangga (dipercepat ke 3 detik)
+    { pos: new THREE.Vector3(1.0, -0.5, 1.5), look: new THREE.Vector3(1.0, -0.5, 0), time: 3000 },
+    
+    // 4. Masuk pintu & SELESAI (dipercepat ke 4.5 detik) -> Langsung Teleport
+    { pos: new THREE.Vector3(1.0, -0.5, 0), look: new THREE.Vector3(1.0, -0.5, -4), time: 4500 },
+
+];
+
+// Load Pokemon Center Diorama
+loader.load('models/Pokemon_Center_Diorama.glb', (gltf) => {
+    dioramaModel = gltf.scene;
+    dioramaModel.position.copy(dioramaPosition);
+    dioramaModel.scale.set(3, 3, 3);
+    
+    dioramaModel.traverse((node) => {
+        if (node.isMesh) {
+            node.castShadow = true;
+            node.receiveShadow = true;
+        }
+    });
+    
+    scene.add(dioramaModel);
+    console.log('Pokemon Center Diorama loaded');
+    
+    // Start intro animation
+    introPhase = 'walking';
+    introStartTime = performance.now();
+    
+    // Set initial camera position
+    const startPoint = introPath[0];
+    camera.position.copy(startPoint.pos.clone().add(dioramaPosition));
+    camera.lookAt(startPoint.look.clone().add(dioramaPosition));
+    
+    console.log('Intro animation started');
+});
+
+// Add lighting for diorama area
+const dioramaAmbient = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(dioramaAmbient);
+
+const dioramaLight = new THREE.DirectionalLight(0xffffff, 0.8);
+dioramaLight.position.set(5, 15, 10);
+dioramaLight.castShadow = true;
+scene.add(dioramaLight);
+
+// Update first-person intro animation
+function updateIntroAnimation() {
+    if (!introActive || introPhase === 'loading' || introPhase === 'done') return;
+    
+    const elapsed = performance.now() - introStartTime;
+    
+    if (introPhase === 'walking') {
+        // Find current segment in path
+        let currentIndex = 0;
+        for (let i = 0; i < introPath.length - 1; i++) {
+            if (elapsed >= introPath[i].time && elapsed < introPath[i + 1].time) {
+                currentIndex = i;
+                break;
+            }
+        }
+        
+        // Check if animation complete
+        if (elapsed >= introPath[introPath.length - 1].time) {
+            introPhase = 'done';
+            introActive = false;
+            
+            // Move camera to gallery
+            camera.position.set(0, 1.7, 8);
+            camera.lookAt(0, 1.7, 0);
+            
+            // Reset rotation for controls
+            yaw = 0;
+            pitch = 0;
+            targetYaw = 0;
+            targetPitch = 0;
+            camera.rotation.set(0, 0, 0);
+            
+            console.log('Intro complete - entering gallery');
+            return;
+        }
+        
+        const currentWaypoint = introPath[currentIndex];
+        const nextWaypoint = introPath[currentIndex + 1];
+        
+        // Calculate progress between waypoints
+        const segmentDuration = nextWaypoint.time - currentWaypoint.time;
+        const segmentElapsed = elapsed - currentWaypoint.time;
+        const t = Math.min(1, Math.max(0, segmentElapsed / segmentDuration));
+        
+        // Smooth easing (ease in-out)
+        const smoothT = t * t * (3 - 2 * t);
+        
+        // Interpolate camera position
+        const targetPos = new THREE.Vector3().lerpVectors(
+            currentWaypoint.pos.clone().add(dioramaPosition),
+            nextWaypoint.pos.clone().add(dioramaPosition),
+            smoothT
+        );
+        
+        // Interpolate look-at point
+        const targetLook = new THREE.Vector3().lerpVectors(
+            currentWaypoint.look.clone().add(dioramaPosition),
+            nextWaypoint.look.clone().add(dioramaPosition),
+            smoothT
+        );
+        
+        camera.position.copy(targetPos);
+        camera.lookAt(targetLook);
+    }
+}
+
+// ===== END FIRST-PERSON INTRO =====
+
 // var controls = new OrbitControls(camera, renderer.domElement);
 // camera.position.set(0, 1.7, 8); // tinggi mata
 // camera.lookAt(0, 1.7, 0);
@@ -955,19 +1084,17 @@ window.addEventListener('resize', function() {
 
 var entering = true;
 function draw() {
-    updateMovement();
+    updateIntroAnimation();
+    
+    if (!introActive) {
+        updateMovement();
+    }
 
     for (var i = 0; i < pokemonMeshes.length; i++) {
         pokemonMeshes[i].rotation.y += 0.005;
     }
+    
     renderer.render(scene, camera);
     requestAnimationFrame(draw);
-
-    if (entering && camera.position.z > 10) {
-    camera.position.z -= 0.1;
-    camera.lookAt(0, 2, 0);
-    } else {
-        entering = false;
-    }
 }
 draw();
