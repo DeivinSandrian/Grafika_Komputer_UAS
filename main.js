@@ -5,6 +5,7 @@ import { sign, texture } from 'three/tsl';
 
 var loader = new GLTFLoader();
 var scene = new THREE.Scene();
+var clock = new THREE.Clock();
 scene.background = new THREE.Color(0x1a1a1a);
 
 var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
@@ -228,8 +229,8 @@ document.addEventListener('mousemove', (e) => {
 
 
 // Fungsi untuk memperbarui posisi kamera berdasarkan input keyboard (AI)
-function updateMovement() {
-    const speed = 0.15;
+function updateMovement(delta) {
+    const speed = 9.0 * delta; 
 
     const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
@@ -247,16 +248,16 @@ function updateMovement() {
     right.crossVectors(forward, camera.up).normalize();
 
     if (keys.w || keys.ArrowUp) {
-        camera.position.add(forward.clone().multiplyScalar(speed));
+    camera.position.addScaledVector(forward, speed);
     }
     if (keys.s || keys.ArrowDown) {
-        camera.position.add(forward.clone().multiplyScalar(-speed));
+    camera.position.addScaledVector(forward, -speed);
     }
     if (keys.a || keys.ArrowLeft) {
-        camera.position.add(right.clone().multiplyScalar(-speed));
+    camera.position.addScaledVector(right, -speed);
     }
     if (keys.d || keys.ArrowRight) {
-        camera.position.add(right.clone().multiplyScalar(speed));
+    camera.position.addScaledVector(right, speed);
     }
 
     // Kunci tinggi kamera (biar tidak terbang)
@@ -1086,8 +1087,10 @@ var entering = true;
 function draw() {
     updateIntroAnimation();
     
+    const delta = clock.getDelta();
+
     if (!introActive) {
-        updateMovement();
+        updateMovement(delta);
     }
 
     for (var i = 0; i < pokemonMeshes.length; i++) {
