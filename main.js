@@ -76,7 +76,7 @@ document.addEventListener('mousemove', (e) => {
 
 // Fungsi untuk memperbarui posisi kamera berdasarkan input keyboard (AI)
 function updateMovement() {
-    const speed = 0.08;
+    const speed = 0.15;
 
     const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
@@ -204,8 +204,7 @@ var wallMaterial = makePokemonWallMaterial();
 
 var wall_belakang = new THREE.Mesh(new THREE.PlaneGeometry(20, 6), wallMaterial);
 wall_belakang.position.set(0, 3, -10);
-// wall_belakang.castShadow = true;
-wall_belakang.receiveShadow = true;
+// wall_belakang.receiveShadow = true;
 
 // var wall_belakang_2 = new THREE.Mesh(new THREE.PlaneGeometry(16, 2), new THREE.MeshLambertMaterial({ color: 0x000000, side: THREE.DoubleSide }));
 // wall_belakang_2.position.set(0, 3, -6);
@@ -265,14 +264,12 @@ var wall_depan = new THREE.Mesh(
     wallMaterial
 );
 wall_depan.position.set(0, 3, 10);
-wall_depan.receiveShadow = true;
 wall_depan.userData.type = "frontWall";
 
 var wall_kiri = new THREE.Mesh(new THREE.PlaneGeometry(20, 6), wallMaterial);
 wall_kiri.position.set(-10, 3, 0);
 wall_kiri.rotation.y = Math.PI / 2;
 // wall_kiri.castShadow = true;
-wall_kiri.receiveShadow = true;
 
 //Wall kanan
 
@@ -281,8 +278,8 @@ var wall_kanan = new THREE.Mesh(
     wallMaterial
 );
 wall_kanan.position.set(10, 3, 0);
-wall_kanan.rotation.y = Math.PI / 2;
-wall_kanan.receiveShadow = true;
+wall_kanan.rotation.y = -Math.PI / 2;
+// wall_kanan.castShadow = true;
 
 var positions = [
     [-5.5, 0, -5.8], // kiri belakang
@@ -357,14 +354,17 @@ const galleryElectric1Models = [
     'models/Elekid.glb'
 ];
 
-const globalAmbient = new THREE.AmbientLight(0xffffff, 0.2);
+const globalAmbient = new THREE.AmbientLight(0xffffff, 0.05);
 scene.add(globalAmbient);
 
 function createRoomLights(offsetX = 0) {
 
-    const main = new THREE.PointLight(0xffffff, 25, 30);
+    const main = new THREE.PointLight(0xffffff, 40, 0);
     main.position.set(offsetX, 6, 0);
     main.castShadow = true;
+    const mainHelper = new THREE.PointLightHelper(main, 1);
+    scene.add(mainHelper);
+    
     scene.add(main);
 
     const spot = new THREE.SpotLight(
@@ -382,6 +382,21 @@ function createRoomLights(offsetX = 0) {
 
     scene.add(spot);
     scene.add(spot.target);
+}
+
+function createRoomCeiling(offsetX = 0) {
+    const ceilingGeo = new THREE.PlaneGeometry(20, 20);
+    const ceilingMat = new THREE.MeshStandardMaterial({
+        color: 0xe67070,
+        emissive: 0xe67070,
+        roughness: 0.6,
+        side: THREE.DoubleSide,
+    });
+    const ceiling = new THREE.Mesh(ceilingGeo, ceilingMat);
+    ceiling.rotation.x = Math.PI / 2;
+    ceiling.position.set(offsetX, 6.05, 0)
+    ceiling.receiveShadow = true;
+    scene.add(ceiling);
 }
 
 function createFloor(offsetX = 0) {
@@ -461,6 +476,7 @@ function createWalls(
     function clone(mesh) {
         const c = mesh.clone();
         c.position.x += offsetX;
+        c.receiveShadow = true;
         scene.add(c);
     }
 
@@ -501,6 +517,7 @@ function createWallWithDoor({
 
     function clone(mesh) {
         const c = mesh.clone();
+        c.receiveShadow = true;
 
         // FRONT WALL
         if (side === 'front') {
@@ -705,6 +722,7 @@ function createGallery(offsetX = 0, modelList = []) {
 
 // Gallery 1
 createFloor(0);
+createRoomCeiling(0);
 createWalls(0, {front: true, right: true, left: true, back: false});
 createDoorSign({offsetX: 0, side: 'front', imagePath: './img/normal.jpg'});
 createDoorSign({offsetX: 0, side: 'left', imagePath: './img/normal.jpg'});
@@ -720,6 +738,7 @@ createCorridorLight(12.5);
 
 // Gallery 2
 createFloor(25);
+createRoomCeiling(25);
 createWalls(25, {front: false, right: true, left: true, back: false });
 createDoorSign({offsetX: 25, side: 'left', imagePath: './img/normal.jpg'});
 createDoorSign({offsetX: 25, side: 'right', imagePath: './img/normal.jpg'});
@@ -734,6 +753,7 @@ createCorridorLight(-12.5);
 
 // Gallery 3
 createFloor(-25);
+createRoomCeiling(-25);
 createWalls(-25, {front: false, right: true, left: true, back: false });
 createDoorSign({offsetX: -25, side: 'left', imagePath: './img/normal.jpg'});
 createDoorSign({offsetX: -25, side: 'right', imagePath: './img/normal.jpg'});
@@ -748,6 +768,7 @@ createCorridorLight(-37.5);
 
 //Gallery 4
 createFloor(-50);
+createRoomCeiling(-50);
 createWalls(-50,  {front: false, right: true, left: false, back: false });
 createDoorSign({offsetX: -50, side: 'right', imagePath: './img/fire.jpg'});
 createRoomLights(-50);
@@ -761,6 +782,7 @@ createCorridorLight(37.5);
 
 //Gallery 5
 createFloor(50);
+createRoomCeiling(50);
 createWalls(50, {front: false, right: false, left: true, back: false});
 createDoorSign({offsetX: 50, side: 'left', imagePath: './img/electric.jpg'});
 createRoomLights(50);
@@ -768,6 +790,7 @@ createGallery(50, galleryElectric1Models);
 
 //Gallery 6
 createFloor(50);
+createRoomCeiling(50);
 createWalls(50, {front: false, right: false, left: true, back: false});
 createDoorSign({offsetX: 50, side: 'left', imagePath: './img/electric.jpg'});
 createRoomLights(50);
